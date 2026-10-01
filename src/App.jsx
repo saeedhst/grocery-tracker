@@ -1,7 +1,11 @@
 const App = () => {
 
     return (
-        <div>App</div>
+        <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+            <h1 className="text-3xl font-bold text-emerald-600">
+                Grocery Tracker
+            </h1>
+        </div>
     )
 }
 
