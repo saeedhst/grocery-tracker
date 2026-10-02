@@ -1,13 +1,6 @@
 // Cloudflare Pages Function: /api/groceries
 export async function onRequestGet(context) {
     try {
-        if (!context.env.DB) {
-            return new Response(
-                JSON.stringify({ message: "DB binding not attached yet, but API function is working!" }),
-                { headers: { "Content-Type": "application/json" } }
-            );
-        }
-
         const { results } = await context.env.DB.prepare(
             "SELECT id, name, category, quantity, unit, location, expiryDate FROM groceries ORDER BY createdAt DESC"
         ).all();
