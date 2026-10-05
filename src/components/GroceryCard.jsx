@@ -1,9 +1,47 @@
-const GroceryCard = ({item, onDelete}) => {
+export default function GroceryCard({ item, onDelete }) {
+
+    const getExpiryBadge = (dateString) => {
+        if (!dateString) return null;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const expDate = new Date(dateString);
+        expDate.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">
+          Expired
+        </span>
+            );
+        }
+        if (diffDays === 0) {
+            return (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">
+          Expires today
+        </span>
+            );
+        }
+        if (diffDays <= 3) {
+            return (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800">
+          Expires in {diffDays} {diffDays === 1 ? "day" : "days"}
+        </span>
+            );
+        }
+        return (
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700">
+        Fresh
+      </span>
+        );
+    };
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
-                {/* Card Header: Item Name, Location Badge, & Delete Action */}
                 <div className="flex justify-between items-start mb-2">
                     <div>
                         <h3 className="font-semibold text-lg text-slate-800">{item.name}</h3>
@@ -28,8 +66,6 @@ const GroceryCard = ({item, onDelete}) => {
                         </svg>
                     </button>
                 </div>
-
-                {/* Card Body: Category and Quantity */}
                 <p className="text-sm text-slate-500 mb-2">
                     Category: <span className="font-medium text-slate-700">{item.category}</span>
                 </p>
@@ -38,13 +74,10 @@ const GroceryCard = ({item, onDelete}) => {
                 </p>
             </div>
 
-            {/* Card Footer: Expiration Date */}
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Expires:</span>
-                <span className="font-medium text-slate-700">{item.expiryDate}</span>
+                <span>{item.expiryDate ? `Exp: ${item.expiryDate}` : "No expiry date"}</span>
+                {getExpiryBadge(item.expiryDate)}
             </div>
         </div>
     );
 }
-
-export default GroceryCard;

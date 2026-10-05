@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import GroceryCard from "./components/GroceryCard";
 import AddItemForm from "./components/AddItemForm";
 import FilterBar from "./components/FilterBar";
+import StatsOverview from "./components/StatsOverview";
 
 export default function App() {
     const [groceries, setGroceries] = useState([]);
@@ -100,6 +101,8 @@ export default function App() {
                     Keep track of pantry, fridge, and freezer inventory.
                 </p>
             </header>
+
+            <StatsOverview groceries={groceries}/>
 
             <main className="max-w-6xl mx-auto">
                 {/* Add Item Form */}
