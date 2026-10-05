@@ -7,6 +7,8 @@ export default function FilterBar({
                                       onSearchChange,
                                       sortBy,
                                       onSortChange,
+                                      viewMode,
+                                      onViewModeChange,
                                   }) {
     return (
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
@@ -58,6 +60,27 @@ export default function FilterBar({
                     <option value="nameAsc">Name (A - Z)</option>
                     <option value="quantityDesc">Quantity (High to Low)</option>
                 </select>
+            </div>
+
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                <button
+                    type="button"
+                    onClick={() => onViewModeChange("grid")}
+                    className={`px-2 py-1 text-xs font-medium rounded ${
+                        viewMode === "grid" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    }`}
+                >
+                    Grid
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onViewModeChange("table")}
+                    className={`px-2 py-1 text-xs font-medium rounded ${
+                        viewMode === "table" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    }`}
+                >
+                    Table
+                </button>
             </div>
         </div>
     );

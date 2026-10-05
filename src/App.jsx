@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import {useState, useEffect, useMemo} from "react";
 import GroceryCard from "./components/GroceryCard";
 import AddItemForm from "./components/AddItemForm";
 import FilterBar from "./components/FilterBar";
 import StatsOverview from "./components/StatsOverview";
+import InventoryTable from "./components/InventoryTable.jsx";
 
 export default function App() {
     const [groceries, setGroceries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [viewMode, setViewMode] = useState("grid");
 
     // Filter & Sort State
     const [selectedLocation, setSelectedLocation] = useState("All");
@@ -43,14 +45,14 @@ export default function App() {
     const handleUpdateQuantity = async (id, newQuantity) => {
         // Optimistic UI update
         setGroceries((prev) =>
-            prev.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
+            prev.map((item) => (item.id === id ? {...item, quantity: newQuantity} : item))
         );
 
         try {
             const res = await fetch("/api/groceries", {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, quantity: newQuantity }),
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({id, quantity: newQuantity}),
             });
 
             if (!res.ok) {
@@ -132,7 +134,7 @@ export default function App() {
 
             <main className="max-w-6xl mx-auto">
                 {/* Add Item Form */}
-                <AddItemForm onAddItem={handleAddItem} />
+                <AddItemForm onAddItem={handleAddItem}/>
 
                 {/* Filter and Sort Toolbar */}
                 <FilterBar
@@ -142,6 +144,7 @@ export default function App() {
                     onSearchChange={setSearchQuery}
                     sortBy={sortBy}
                     onSortChange={setSortBy}
+                    onViewModeChange={setViewMode}
                 />
 
                 {/* Status Indicators */}
@@ -166,8 +169,7 @@ export default function App() {
                     </p>
                 )}
 
-                {/* Groceries Grid */}
-                {!loading && !error && filteredAndSortedGroceries.length > 0 && (
+                {viewMode === "grid" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {filteredAndSortedGroceries.map((item) => (
                             <GroceryCard
@@ -178,7 +180,14 @@ export default function App() {
                             />
                         ))}
                     </div>
+                ) : (
+                    <InventoryTable
+                        items={filteredAndSortedGroceries}
+                        onDelete={handleDeleteItem}
+                        onUpdateQuantity={handleUpdateQuantity}
+                    />
                 )}
+
             </main>
         </div>
     );
