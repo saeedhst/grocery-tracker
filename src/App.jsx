@@ -1,6 +1,7 @@
 // import {INITIAL_GROCERIES} from "./data/mockGroceries.js";
 import GroceryCard from "./components/GroceryCard.jsx";
 import {useState, useEffect} from "react";
+import AddItemForm from "./components/AddItemForm.jsx";
 
 const App = () => {
 
@@ -8,6 +9,9 @@ const App = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const handleAddItem = (newItem) =>{
+        setGroceries((prev)=> [newItem, ...prev])
+    }
 
     useEffect(() => {
         async function loadGroceries() {
@@ -52,6 +56,8 @@ const App = () => {
                     Keep track of pantry, fridge, and freezer inventory.
                 </p>
             </header>
+
+            <AddItemForm onAddItem={handleAddItem}/>
 
             <main className="max-w-6xl mx-auto">
                 {loading && (
