@@ -40,6 +40,32 @@ export default function App() {
         setGroceries((prev) => [newItem, ...prev]);
     };
 
+    const handleUpdateQuantity = async (id, newQuantity) => {
+        // Optimistic UI update
+        setGroceries((prev) =>
+            prev.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
+        );
+
+        try {
+            const res = await fetch("/api/groceries", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, quantity: newQuantity }),
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to update quantity on server");
+            }
+        } catch (err) {
+            alert(err.message);
+            // Roll back by refetching from server
+            const reload = await fetch("/api/groceries");
+            if (reload.ok) {
+                setGroceries(await reload.json());
+            }
+        }
+    };
+
     // 3. Delete Item Handler
     const handleDeleteItem = async (id) => {
         try {
@@ -148,6 +174,7 @@ export default function App() {
                                 key={item.id}
                                 item={item}
                                 onDelete={handleDeleteItem}
+                                onUpdateQuantity={handleUpdateQuantity}
                             />
                         ))}
                     </div>

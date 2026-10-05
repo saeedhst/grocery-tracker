@@ -72,3 +72,34 @@ export async function onRequestDelete(context) {
         });
     }
 }
+
+export async function onRequestPatch(context) {
+    try {
+        const body = await context.request.json();
+        const { id, quantity } = body;
+
+        if (!id || quantity === undefined || quantity === null) {
+            return new Response(JSON.stringify({ error: "Item ID and quantity are required" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        const newQty = Math.max(0, Number(quantity));
+
+        await context.env.DB.prepare(
+            "UPDATE groceries SET quantity = ? WHERE id = ?"
+        )
+            .bind(newQty, id)
+            .run();
+
+        return new Response(JSON.stringify({ success: true, id, quantity: newQty }), {
+            headers: { "Content-Type": "application/json" },
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+}

@@ -1,5 +1,4 @@
-export default function GroceryCard({ item, onDelete }) {
-
+export default function GroceryCard({ item, onDelete, onUpdateQuantity }) {
     const getExpiryBadge = (dateString) => {
         if (!dateString) return null;
 
@@ -39,6 +38,16 @@ export default function GroceryCard({ item, onDelete }) {
         );
     };
 
+    const handleDecrement = () => {
+        const newQty = Math.max(0, Number(item.quantity) - 1);
+        onUpdateQuantity(item.id, newQty);
+    };
+
+    const handleIncrement = () => {
+        const newQty = Number(item.quantity) + 1;
+        onUpdateQuantity(item.id, newQty);
+    };
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
@@ -66,12 +75,36 @@ export default function GroceryCard({ item, onDelete }) {
                         </svg>
                     </button>
                 </div>
-                <p className="text-sm text-slate-500 mb-2">
+
+                <p className="text-sm text-slate-500 mb-3">
                     Category: <span className="font-medium text-slate-700">{item.category}</span>
                 </p>
-                <p className="text-sm text-slate-600">
-                    Quantity: <span className="font-semibold text-slate-900">{item.quantity} {item.unit}</span>
-                </p>
+
+                {/* Quantity and Stepper Controls */}
+                <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <span className="text-xs font-medium text-slate-500">Quantity</span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={handleDecrement}
+                            className="w-6 h-6 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-sm shadow-sm"
+                            title="Decrease quantity"
+                        >
+                            -
+                        </button>
+                        <span className="text-sm font-semibold text-slate-800 min-w-12 text-center">
+              {item.quantity} {item.unit}
+            </span>
+                        <button
+                            type="button"
+                            onClick={handleIncrement}
+                            className="w-6 h-6 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-sm shadow-sm"
+                            title="Increase quantity"
+                        >
+                            +
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
