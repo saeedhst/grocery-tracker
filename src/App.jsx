@@ -68,6 +68,32 @@ export default function App() {
         }
     };
 
+    const handleUpdateItem = async (updatedItem) => {
+        // Optimistic UI update
+        setGroceries((prev) =>
+            prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+        );
+
+        try {
+            const res = await fetch("/api/groceries", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedItem),
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to save changes to Cloudflare D1");
+            }
+        } catch (err) {
+            alert(err.message);
+            // Roll back if error occurs
+            const reload = await fetch("/api/groceries");
+            if (reload.ok) {
+                setGroceries(await reload.json());
+            }
+        }
+    };
+
     // 3. Delete Item Handler
     const handleDeleteItem = async (id) => {
         try {
@@ -177,6 +203,7 @@ export default function App() {
                                 item={item}
                                 onDelete={handleDeleteItem}
                                 onUpdateQuantity={handleUpdateQuantity}
+                                handleUpdateItem={handleUpdateItem}
                             />
                         ))}
                     </div>
