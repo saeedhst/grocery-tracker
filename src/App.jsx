@@ -203,7 +203,7 @@ export default function App() {
                                 item={item}
                                 onDelete={handleDeleteItem}
                                 onUpdateQuantity={handleUpdateQuantity}
-                                handleUpdateItem={handleUpdateItem}
+                                onUpdateItem={handleUpdateItem}
                             />
                         ))}
                     </div>
