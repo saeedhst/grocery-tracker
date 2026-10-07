@@ -1,16 +1,13 @@
 import { useState } from "react";
 
-const LOCATIONS = ["Fridge", "Pantry", "Freezer"];
-const CATEGORIES = ["Dairy", "Bakery", "Produce", "Meat", "Pantry", "Snacks", "Beverages"];
-
-export default function AddItemForm({ onAddItem }) {
+export default function AddItemForm({ onAddItem, locations, categories, units }) {
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
-        category: CATEGORIES[0],
+        category: categories[0] || "Pantry",
         quantity: 1,
-        unit: "pcs",
-        location: LOCATIONS[0],
+        unit: units[0]?.value || "pcs",
+        location: locations[0] || "Pantry",
         expiryDate: "",
     });
     const [submitting, setSubmitting] = useState(false);
@@ -39,13 +36,12 @@ export default function AddItemForm({ onAddItem }) {
             const newItem = await res.json();
             onAddItem(newItem);
 
-            // Reset form and close modal/drawer
             setFormData({
                 name: "",
-                category: CATEGORIES[0],
+                category: categories[0] || "Pantry",
                 quantity: 1,
-                unit: "pcs",
-                location: LOCATIONS[0],
+                unit: units[0]?.value || "pcs",
+                location: locations[0] || "Pantry",
                 expiryDate: "",
             });
             setIsOpen(false);
@@ -84,7 +80,9 @@ export default function AddItemForm({ onAddItem }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 mb-1">Item Name</label>
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                                Item Name
+                            </label>
                             <input
                                 type="text"
                                 name="name"
@@ -97,36 +95,46 @@ export default function AddItemForm({ onAddItem }) {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                                Category
+                            </label>
                             <select
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
-                                className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:outline-emerald-500"
+                                className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:outline-emerald-500 bg-white"
                             >
-                                {CATEGORIES.map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                {categories.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
                                 ))}
                             </select>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 mb-1">Storage Location</label>
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                                Storage Location
+                            </label>
                             <select
                                 name="location"
                                 value={formData.location}
                                 onChange={handleChange}
-                                className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:outline-emerald-500"
+                                className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:outline-emerald-500 bg-white"
                             >
-                                {LOCATIONS.map((loc) => (
-                                    <option key={loc} value={loc}>{loc}</option>
+                                {locations.map((loc) => (
+                                    <option key={loc} value={loc}>
+                                        {loc}
+                                    </option>
                                 ))}
                             </select>
                         </div>
 
                         <div className="flex gap-2">
                             <div className="w-1/2">
-                                <label className="block text-xs font-medium text-slate-600 mb-1">Quantity</label>
+                                <label className="block text-xs font-medium text-slate-600 mb-1">
+                                    Quantity
+                                </label>
                                 <input
                                     type="number"
                                     name="quantity"
@@ -139,20 +147,28 @@ export default function AddItemForm({ onAddItem }) {
                                 />
                             </div>
                             <div className="w-1/2">
-                                <label className="block text-xs font-medium text-slate-600 mb-1">Unit</label>
-                                <input
-                                    type="text"
+                                <label className="block text-xs font-medium text-slate-600 mb-1">
+                                    Unit
+                                </label>
+                                <select
                                     name="unit"
                                     value={formData.unit}
                                     onChange={handleChange}
-                                    placeholder="pcs, kg, L"
-                                    className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:outline-emerald-500"
-                                />
+                                    className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:outline-emerald-500 bg-white"
+                                >
+                                    {units.map((u) => (
+                                        <option key={u.value} value={u.value}>
+                                            {u.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 mb-1">Expiry Date</label>
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                                Expiry Date
+                            </label>
                             <input
                                 type="date"
                                 name="expiryDate"

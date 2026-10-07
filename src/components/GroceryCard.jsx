@@ -1,9 +1,14 @@
 import { useState } from "react";
 
-const LOCATIONS = ["Fridge", "Pantry", "Freezer"];
-const CATEGORIES = ["Dairy", "Bakery", "Produce", "Meat", "Pantry", "Snacks", "Beverages"];
-
-export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdateItem }) {
+export default function GroceryCard({
+                                        item,
+                                        locations = [],
+                                        categories = [],
+                                        units = [],
+                                        onDelete,
+                                        onUpdateQuantity,
+                                        onUpdateItem,
+                                    }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ ...item });
     const [saving, setSaving] = useState(false);
@@ -101,7 +106,6 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                     <div className="flex items-center gap-1">
                         {isEditing ? (
                             <>
-                                {/* Accept / Save (Green Check) */}
                                 <button
                                     type="button"
                                     onClick={handleSave}
@@ -114,8 +118,6 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </button>
-
-                                {/* Cancel (X button) */}
                                 <button
                                     type="button"
                                     onClick={handleCancel}
@@ -131,7 +133,6 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                             </>
                         ) : (
                             <>
-                                {/* Edit Button (Pencil) behind the delete button */}
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(true)}
@@ -147,8 +148,6 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                                         />
                                     </svg>
                                 </button>
-
-                                {/* Delete Button */}
                                 <button
                                     type="button"
                                     onClick={() => onDelete(item.id)}
@@ -169,7 +168,7 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                     </div>
                 </div>
 
-                {/* Card Body: Editing vs View Mode */}
+                {/* Card Body */}
                 {isEditing ? (
                     <div className="space-y-2 mt-3 text-xs">
                         <div>
@@ -178,10 +177,12 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                                 name="category"
                                 value={editForm.category}
                                 onChange={handleFieldChange}
-                                className="w-full border border-slate-300 rounded p-1 text-slate-700 focus:outline-emerald-500"
+                                className="w-full border border-slate-300 rounded p-1 text-slate-700 focus:outline-emerald-500 bg-white"
                             >
-                                {CATEGORIES.map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                {categories.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -192,10 +193,12 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                                 name="location"
                                 value={editForm.location}
                                 onChange={handleFieldChange}
-                                className="w-full border border-slate-300 rounded p-1 text-slate-700 focus:outline-emerald-500"
+                                className="w-full border border-slate-300 rounded p-1 text-slate-700 focus:outline-emerald-500 bg-white"
                             >
-                                {LOCATIONS.map((loc) => (
-                                    <option key={loc} value={loc}>{loc}</option>
+                                {locations.map((loc) => (
+                                    <option key={loc} value={loc}>
+                                        {loc}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -215,13 +218,18 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                             </div>
                             <div className="w-1/2">
                                 <label className="text-[10px] uppercase font-bold text-slate-400">Unit</label>
-                                <input
-                                    type="text"
+                                <select
                                     name="unit"
                                     value={editForm.unit}
                                     onChange={handleFieldChange}
-                                    className="w-full border border-slate-300 rounded p-1 text-slate-700 focus:outline-emerald-500"
-                                />
+                                    className="w-full border border-slate-300 rounded p-1 text-slate-700 focus:outline-emerald-500 bg-white"
+                                >
+                                    {units.map((u) => (
+                                        <option key={u.value} value={u.value}>
+                                            {u.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
@@ -247,7 +255,9 @@ export default function GroceryCard({ item, onDelete, onUpdateQuantity, onUpdate
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => onUpdateQuantity(item.id, Math.max(0, Number(item.quantity) - 1))}
+                                    onClick={() =>
+                                        onUpdateQuantity(item.id, Math.max(0, Number(item.quantity) - 1))
+                                    }
                                     className="w-6 h-6 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-sm shadow-sm"
                                 >
                                     -
