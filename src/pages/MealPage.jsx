@@ -2,8 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import MealStatsOverview from "../components/meals/MealStatsOverview";
 import MealCard from "../components/meals/MealCard";
 import AddMealModal from "../components/meals/AddMealModal";
-import GroceryCard from "../components/GroceryCard";
-import InventoryTable from "../components/InventoryTable";
+import GroceryCard from "../components/dashboard/GroceryCard.jsx";
 
 export default function MealsPage() {
     const [groceries, setGroceries] = useState([]);
