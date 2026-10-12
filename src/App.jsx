@@ -3,6 +3,7 @@ import Navbar from "./components/layout/Navbar";
 import DashboardPage from "./pages/DashboardPage";
 import { SettingsProvider } from "./context/SettingsContext";
 import SettingsPage from "./pages/SettingsPages.jsx";
+import MealsPage from "./pages/MealPage.jsx";
 
 export default function App() {
     return (
@@ -12,6 +13,9 @@ export default function App() {
                 <main className="px-6 pb-12">
                     <Routes>
                         <Route path="/" element={<DashboardPage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/" element={<DashboardPage />} />
+                        <Route path="/meals" element={<MealsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                     </Routes>
                 </main>

@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS meals (
+id TEXT PRIMARY KEY,
+name TEXT NOT NULL,
+description TEXT,
+createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS meal_ingredients (
+id TEXT PRIMARY KEY,
+meal_id TEXT NOT NULL,
+grocery_name TEXT NOT NULL,
+required_quantity REAL NOT NULL DEFAULT 1,
+unit TEXT,
+FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE
+);

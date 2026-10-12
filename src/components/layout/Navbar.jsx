@@ -35,6 +35,20 @@ export default function Navbar() {
                     >
                         Settings
                     </NavLink>
+
+                    <NavLink
+                        to="/meals"
+                        className={({ isActive }) =>
+                            `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                isActive
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "text-slate-600 hover:text-slate-900"
+                            }`
+                        }
+                    >
+                        Meals
+                    </NavLink>
+
                 </nav>
             </div>
         </header>
