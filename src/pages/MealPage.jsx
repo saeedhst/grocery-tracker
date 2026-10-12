@@ -22,6 +22,7 @@ export default function MealsPage() {
             const [gRes, mRes] = await Promise.all([
                 fetch("/api/groceries"),
                 fetch("/api/meals"),
+
             ]);
             if (gRes.ok) setGroceries(await gRes.json());
             if (mRes.ok) setMeals(await mRes.json());
