@@ -21,6 +21,7 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
     const [newUnitValue, setNewUnitValue] = useState("");
     const [editingKey, setEditingKey] = useState(null);
     const [editValue, setEditValue] = useState("");
+    const [lastCreatedValue, setLastCreatedValue] = useState(null);
 
     if (!isOpen) return null;
 
@@ -34,17 +35,28 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
 
     const items = isUnit ? units : type === "location" ? locations : categories;
 
+    const handleClose = () => {
+        onClose(lastCreatedValue);
+        setLastCreatedValue(null);
+    };
+
     const handleAdd = async (e) => {
         e.preventDefault();
         if (!newItemName.trim()) return;
 
         if (isUnit) {
-            await addUnit(newItemName, newUnitValue || newItemName);
+            const unitVal = (newUnitValue || newItemName).trim().toLowerCase();
+            await addUnit(newItemName, unitVal);
+            setLastCreatedValue(unitVal);
             setNewUnitValue("");
         } else if (type === "location") {
-            await addLocation(newItemName);
+            const locName = newItemName.trim();
+            await addLocation(locName);
+            setLastCreatedValue(locName);
         } else {
-            await addCategory(newItemName);
+            const catName = newItemName.trim();
+            await addCategory(catName);
+            setLastCreatedValue(catName);
         }
         setNewItemName("");
     };
@@ -64,10 +76,13 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
     const handleDelete = async (key) => {
         if (isUnit) {
             await removeUnit(key);
+            if (lastCreatedValue === key) setLastCreatedValue(null);
         } else if (type === "location") {
             await removeLocation(key);
+            if (lastCreatedValue === key) setLastCreatedValue(null);
         } else {
             await removeCategory(key);
+            if (lastCreatedValue === key) setLastCreatedValue(null);
         }
     };
 
@@ -79,7 +94,7 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
                     <h3 className="font-semibold text-slate-800 text-base">{title}</h3>
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
                     >
                         ✕
@@ -115,15 +130,21 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
                     </form>
                 </div>
 
-                {/* Existing List */}
+                {/* List */}
                 <div className="p-5 overflow-y-auto divide-y divide-slate-100 flex-1">
                     {items.map((item) => {
                         const key = isUnit ? item.value : item;
                         const displayLabel = isUnit ? `${item.label} (${item.value})` : item;
                         const isEditing = editingKey === key;
+                        const isJustAdded = lastCreatedValue === key;
 
                         return (
-                            <div key={key} className="py-2 flex items-center justify-between gap-2">
+                            <div
+                                key={key}
+                                className={`py-2 px-1 rounded flex items-center justify-between gap-2 transition-colors ${
+                                    isJustAdded ? "bg-emerald-50/60" : ""
+                                }`}
+                            >
                                 {isEditing ? (
                                     <div className="flex items-center gap-2 flex-1">
                                         <input
@@ -150,9 +171,16 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
                                     </div>
                                 ) : (
                                     <>
-                    <span className="text-sm font-medium text-slate-700 truncate">
-                      {displayLabel}
-                    </span>
+                                        <div className="flex items-center gap-2 truncate">
+                      <span className="text-sm font-medium text-slate-700 truncate">
+                        {displayLabel}
+                      </span>
+                                            {isJustAdded && (
+                                                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">
+                          New
+                        </span>
+                                            )}
+                                        </div>
                                         <div className="flex items-center gap-1">
                                             <button
                                                 type="button"
@@ -185,7 +213,7 @@ export default function ManageTaxonomyModal({ isOpen, onClose, type }) {
                 <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="px-4 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100"
                     >
                         Done

@@ -55,6 +55,20 @@ export default function AddItemForm({ onAddItem, locations, categories, units })
         }
     };
 
+    // Handle closing modal and auto-select newly added item
+    const handleModalClose = (newlyAddedValue) => {
+        if (newlyAddedValue) {
+            if (activeModalType === "category") {
+                setFormData((prev) => ({ ...prev, category: newlyAddedValue }));
+            } else if (activeModalType === "location") {
+                setFormData((prev) => ({ ...prev, location: newlyAddedValue }));
+            } else if (activeModalType === "unit") {
+                setFormData((prev) => ({ ...prev, unit: newlyAddedValue }));
+            }
+        }
+        setActiveModalType(null);
+    };
+
     return (
         <>
             <div className="mb-8">
@@ -242,7 +256,7 @@ export default function AddItemForm({ onAddItem, locations, categories, units })
             <ManageTaxonomyModal
                 isOpen={Boolean(activeModalType)}
                 type={activeModalType}
-                onClose={() => setActiveModalType(null)}
+                onClose={handleModalClose}
             />
         </>
     );
