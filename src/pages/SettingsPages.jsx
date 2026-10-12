@@ -27,7 +27,7 @@ export default function SettingsPage() {
             </div>
 
             <EditableTagList
-                title="Storage Locations"
+                title="Storage Locations 📍"
                 items={locations}
                 onAdd={addLocation}
                 onUpdate={updateLocation}
@@ -35,7 +35,7 @@ export default function SettingsPage() {
             />
 
             <EditableTagList
-                title="Item Categories"
+                title="Categories"
                 items={categories}
                 onAdd={addCategory}
                 onUpdate={updateCategory}
@@ -43,7 +43,7 @@ export default function SettingsPage() {
             />
 
             <EditableTagList
-                title="Measurement Units"
+                title="Units"
                 items={units}
                 onAdd={addUnit}
                 onUpdate={updateUnit}

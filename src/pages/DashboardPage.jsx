@@ -1,10 +1,10 @@
 // src/pages/DashboardPage.jsx
 import { useState, useEffect, useMemo } from "react";
-import GroceryCard from "../components/GroceryCard";
-import AddItemForm from "../components/AddItemForm";
-import FilterBar from "../components/FilterBar";
-import StatsOverview from "../components/StatsOverview";
-import InventoryTable from "../components/InventoryTable";
+import GroceryCard from "../components/dashboard/GroceryCard.jsx";
+import AddItemForm from "../components/dashboard/AddItemForm.jsx";
+import FilterBar from "../components/dashboard/FilterBar.jsx";
+import StatsOverview from "../components/dashboard/StatsOverview.jsx";
+import InventoryTable from "../components/dashboard/InventoryTable.jsx";
 import { useSettings } from "../context/SettingsContext";
 
 export default function DashboardPage() {

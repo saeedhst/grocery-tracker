@@ -1,5 +1,3 @@
-// src/constants/groceryConfig.js
-
 export const DEFAULT_LOCATIONS = ["Fridge", "Pantry", "Freezer"];
 
 export const DEFAULT_CATEGORIES = [
