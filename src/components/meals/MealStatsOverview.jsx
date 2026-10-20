@@ -1,9 +1,8 @@
-export default function MealStatsOverview({ meals = [], checkMealAvailability }) {
+export default function MealStatsOverview({ meals = [] }) {
     const stats = meals.reduce(
         (acc, meal) => {
             acc.total += 1;
-            const { canMake } = checkMealAvailability(meal);
-            if (canMake) {
+            if (meal.canMake) {
                 acc.readyToCook += 1;
             } else {
                 acc.missingIngredients += 1;

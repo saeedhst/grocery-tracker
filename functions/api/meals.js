@@ -1,20 +1,60 @@
 // GET all meals with ingredients, POST to create a meal, DELETE to remove
+// functions/api/meals.js
+
 export async function onRequestGet(context) {
     try {
+        // 1. Fetch all meals
         const { results: meals } = await context.env.DB.prepare(
             "SELECT * FROM meals ORDER BY createdAt DESC"
         ).all();
 
+        // 2. Fetch all ingredients
         const { results: ingredients } = await context.env.DB.prepare(
             "SELECT * FROM meal_ingredients"
         ).all();
 
-        const mealsWithIngredients = meals.map((meal) => ({
-            ...meal,
-            ingredients: ingredients.filter((ing) => ing.meal_id === meal.id),
-        }));
+        // 3. Fetch all current inventory items
+        const { results: groceries } = await context.env.DB.prepare(
+            "SELECT name, quantity, unit FROM groceries"
+        ).all();
 
-        return new Response(JSON.stringify(mealsWithIngredients), {
+        // 4. Combine and compute stock levels
+        const mealsWithStock = meals.map((meal) => {
+            let canMake = true;
+
+            const enrichedIngredients = ingredients
+                .filter((ing) => ing.meal_id === meal.id)
+                .map((ing) => {
+                    // Find matching item in inventory (case-insensitive)
+                    const matchedItem = groceries.find(
+                        (g) => g.name.trim().toLowerCase() === ing.grocery_name.trim().toLowerCase()
+                    );
+
+                    const availableQty = matchedItem ? Number(matchedItem.quantity) : 0;
+                    const isMissing = availableQty < Number(ing.required_quantity);
+
+                    if (isMissing) {
+                        canMake = false;
+                    }
+
+                    return {
+                        id: ing.id,
+                        name: ing.grocery_name,
+                        requiredQuantity: Number(ing.required_quantity),
+                        availableQuantity: availableQty,
+                        unit: ing.unit || matchedItem?.unit || "pcs",
+                        isMissing,
+                    };
+                });
+
+            return {
+                ...meal,
+                canMake,
+                ingredients: enrichedIngredients,
+            };
+        });
+
+        return new Response(JSON.stringify(mealsWithStock), {
             headers: { "Content-Type": "application/json" },
         });
     } catch (error) {

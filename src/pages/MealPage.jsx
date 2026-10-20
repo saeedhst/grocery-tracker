@@ -22,7 +22,6 @@ export default function MealsPage() {
             const [gRes, mRes] = await Promise.all([
                 fetch("/api/groceries"),
                 fetch("/api/meals"),
-
             ]);
             if (gRes.ok) setGroceries(await gRes.json());
             if (mRes.ok) setMeals(await mRes.json());
@@ -55,23 +54,6 @@ export default function MealsPage() {
         setSelectedGroceryIds(new Set());
     };
 
-    // Recipe availability check
-    const checkMealAvailability = (meal) => {
-        const missingItems = [];
-        for (const req of meal.ingredients) {
-            const match = groceries.find(
-                (g) => g.name.toLowerCase() === req.grocery_name.toLowerCase()
-            );
-            if (!match || Number(match.quantity) < Number(req.required_quantity)) {
-                missingItems.push({
-                    name: req.grocery_name,
-                    required: req.required_quantity,
-                    available: match ? match.quantity : 0,
-                });
-            }
-        }
-        return { canMake: missingItems.length === 0, missingItems };
-    };
 
     // Save new meal
     const handleSaveMeal = async (mealPayload) => {
@@ -115,7 +97,6 @@ export default function MealsPage() {
                 </p>
                 <MealStatsOverview
                     meals={meals}
-                    checkMealAvailability={checkMealAvailability}
                 />
             </div>
 
@@ -128,7 +109,6 @@ export default function MealsPage() {
                             <MealCard
                                 key={meal.id}
                                 meal={meal}
-                                availability={checkMealAvailability(meal)}
                                 onDelete={handleDeleteMeal}
                             />
                         ))}
