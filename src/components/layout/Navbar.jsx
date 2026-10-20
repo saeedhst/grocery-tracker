@@ -49,6 +49,17 @@ export default function Navbar() {
                         Meals
                     </NavLink>
 
+                    <NavLink
+                        to="/shopping"
+                        className={({ isActive }) =>
+                            `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                isActive ? "bg-emerald-50 text-emerald-700" : "text-slate-600 hover:text-slate-900"
+                            }`
+                        }
+                    >
+                        Shopping
+                    </NavLink>
+
                 </nav>
             </div>
         </header>

@@ -8,6 +8,7 @@ export default function GroceryCard({
                                         onDelete,
                                         onUpdateQuantity,
                                         onUpdateItem,
+                                        onOpenShoppingModal,
                                     }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ ...item });
@@ -106,6 +107,7 @@ export default function GroceryCard({
                     <div className="flex items-center gap-1">
                         {isEditing ? (
                             <>
+                                {/* Accept / Save */}
                                 <button
                                     type="button"
                                     onClick={handleSave}
@@ -118,6 +120,8 @@ export default function GroceryCard({
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </button>
+
+                                {/* Cancel */}
                                 <button
                                     type="button"
                                     onClick={handleCancel}
@@ -133,6 +137,26 @@ export default function GroceryCard({
                             </>
                         ) : (
                             <>
+                                {/* Save to Shopping List */}
+                                {onOpenShoppingModal && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenShoppingModal(item)}
+                                        className="text-slate-400 hover:text-emerald-600 transition-colors p-1"
+                                        title="Add to Shopping List"
+                                        aria-label="Add to Shopping List"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                                            />
+                                        </svg>
+                                    </button>
+                                )}
+
+                                {/* Edit Button */}
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(true)}
@@ -148,6 +172,8 @@ export default function GroceryCard({
                                         />
                                     </svg>
                                 </button>
+
+                                {/* Delete Button */}
                                 <button
                                     type="button"
                                     onClick={() => onDelete(item.id)}

@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import { SettingsProvider } from "./context/SettingsContext";
 import SettingsPage from "./pages/SettingsPages.jsx";
 import MealsPage from "./pages/MealPage.jsx";
+import ShoppingListsPage from "./pages/ShoppingListPage.jsx";
 
 export default function App() {
     return (
@@ -17,6 +18,7 @@ export default function App() {
                         <Route path="/" element={<DashboardPage />} />
                         <Route path="/meals" element={<MealsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/shopping" element={<ShoppingListsPage />} />
                     </Routes>
                 </main>
             </div>

@@ -1,10 +1,10 @@
-// src/pages/DashboardPage.jsx
 import { useState, useEffect, useMemo } from "react";
 import GroceryCard from "../components/dashboard/GroceryCard.jsx";
 import AddItemForm from "../components/dashboard/AddItemForm.jsx";
 import FilterBar from "../components/dashboard/FilterBar.jsx";
 import StatsOverview from "../components/dashboard/StatsOverview.jsx";
 import InventoryTable from "../components/dashboard/InventoryTable.jsx";
+import AddToShoppingListModal from "../components/modals/AddToShoppingListModal.jsx";
 import { useSettings } from "../context/SettingsContext";
 
 export default function DashboardPage() {
@@ -16,6 +16,7 @@ export default function DashboardPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("expiryAsc");
     const [viewMode, setViewMode] = useState("grid");
+    const [shoppingModalItem, setShoppingModalItem] = useState(null);
 
     const { locations, categories, units } = useSettings();
 
@@ -88,7 +89,7 @@ export default function DashboardPage() {
                 const matchesSearch =
                     !q ||
                     item.name.toLowerCase().includes(q) ||
-                    item.category.toLowerCase().includes(q);
+                    item.category?.toLowerCase().includes(q);
                 return matchesLocation && matchesSearch;
             })
             .sort((a, b) => {
@@ -154,6 +155,7 @@ export default function DashboardPage() {
                                     onDelete={handleDeleteItem}
                                     onUpdateQuantity={handleUpdateQuantity}
                                     onUpdateItem={handleUpdateItem}
+                                    onOpenShoppingModal={(selected) => setShoppingModalItem(selected)}
                                 />
                             ))}
                         </div>
@@ -166,6 +168,13 @@ export default function DashboardPage() {
                     )}
                 </>
             )}
+
+            {/* Shopping List Modal */}
+            <AddToShoppingListModal
+                isOpen={Boolean(shoppingModalItem)}
+                groceryItem={shoppingModalItem}
+                onClose={() => setShoppingModalItem(null)}
+            />
         </div>
     );
 }
