@@ -5,6 +5,7 @@ import { SettingsProvider } from "./context/SettingsContext";
 import SettingsPage from "./pages/SettingsPages.jsx";
 import MealsPage from "./pages/MealPage.jsx";
 import ShoppingListsPage from "./pages/ShoppingListPage.jsx";
+import ItemDetailPage from "./pages/ItemDetailPage.jsx";
 
 export default function App() {
     return (
@@ -19,6 +20,7 @@ export default function App() {
                         <Route path="/meals" element={<MealsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/shopping" element={<ShoppingListsPage />} />
+                        <Route path="/items/:id" element={<ItemDetailPage />} />
                     </Routes>
                 </main>
             </div>

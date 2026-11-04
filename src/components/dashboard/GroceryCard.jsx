@@ -1,4 +1,5 @@
-import { useState } from "react";
+import {useState} from "react";
+import {Link} from "react-router-dom";
 
 export default function GroceryCard({
                                         item,
@@ -11,7 +12,7 @@ export default function GroceryCard({
                                         onOpenShoppingModal,
                                     }) {
     const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ ...item });
+    const [editForm, setEditForm] = useState({...item});
     const [saving, setSaving] = useState(false);
 
     const getExpiryBadge = (dateString) => {
@@ -53,12 +54,12 @@ export default function GroceryCard({
     };
 
     const handleFieldChange = (e) => {
-        const { name, value } = e.target;
-        setEditForm((prev) => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setEditForm((prev) => ({...prev, [name]: value}));
     };
 
     const handleCancel = () => {
-        setEditForm({ ...item });
+        setEditForm({...item});
         setIsEditing(false);
     };
 
@@ -79,7 +80,8 @@ export default function GroceryCard({
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div
+            className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
                 {/* Header Actions */}
                 <div className="flex justify-between items-start mb-2">
@@ -96,10 +98,13 @@ export default function GroceryCard({
                         </div>
                     ) : (
                         <div>
-                            <h3 className="font-semibold text-lg text-slate-800">{item.name}</h3>
-                            <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-medium inline-block mt-1">
-                {item.location}
-              </span>
+                            <Link to={`/items/${item.id}`} className="hover:text-emerald-600 transition-colors">
+                                <h3 className="font-semibold text-lg text-slate-800">{item.name}</h3>
+                            </Link>
+                            <span
+                                className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-medium inline-block mt-1">
+    {item.location}
+  </span>
                         </div>
                     )}
 
@@ -116,8 +121,9 @@ export default function GroceryCard({
                                     title="Save changes"
                                     aria-label="Save changes"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"
+                                         viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </button>
 
@@ -130,8 +136,9 @@ export default function GroceryCard({
                                     title="Cancel"
                                     aria-label="Cancel"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+                                         viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </button>
                             </>
@@ -146,7 +153,8 @@ export default function GroceryCard({
                                         title="Add to Shopping List"
                                         aria-label="Add to Shopping List"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+                                             viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"
@@ -164,7 +172,8 @@ export default function GroceryCard({
                                     title="Edit item"
                                     aria-label="Edit item"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+                                         viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
@@ -181,7 +190,8 @@ export default function GroceryCard({
                                     title="Remove item"
                                     aria-label="Remove item"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+                                         viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
@@ -276,7 +286,8 @@ export default function GroceryCard({
                             Category: <span className="font-medium text-slate-700">{item.category}</span>
                         </p>
 
-                        <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <div
+                            className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
                             <span className="text-xs font-medium text-slate-500">Quantity</span>
                             <div className="flex items-center gap-2">
                                 <button
@@ -305,7 +316,8 @@ export default function GroceryCard({
             </div>
 
             {!isEditing && (
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <div
+                    className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                     <span>{item.expiryDate ? `Exp: ${item.expiryDate}` : "No expiry date"}</span>
                     {getExpiryBadge(item.expiryDate)}
                 </div>
