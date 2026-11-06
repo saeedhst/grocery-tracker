@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
-
-const SUPERMARKET_API_BASE =
-    import.meta.env.VITE_SUPERMARKET_API_BASE_URL ||
-    "https://supermarket-api-ah.saeedhst.workers.dev";
+import { getProductByName, getProductById } from "../services/supermarketApi";
 
 const NUTRISCORE_COLORS = {
     A: "bg-emerald-600 text-white",
@@ -57,40 +54,47 @@ export default function ItemDetailPage() {
         loadItem();
     }, [id]);
 
-    // 2. Fetch Supermarket Data whenever item.name is loaded or updated
+
+    // 2. Fetch Supermarket Data using centralized service
     useEffect(() => {
         if (!item?.name) return;
 
-        const controller = new AbortController();
+        let isMounted = true;
 
-        async function fetchSupermarketProduct() {
+        async function loadSupermarketDetails() {
             try {
                 setProductLoading(true);
                 setProductError(null);
 
-                const url = `${SUPERMARKET_API_BASE.replace(/\/$/, "")}/api/product?q=${encodeURIComponent(
-                    item.name.trim()
-                )}`;
+                // If the item has a saved AH ID in the future, use getProductById, otherwise search by name
+                const data = item.ah_product_id
+                    ? await getProductById(item.ah_product_id)
+                    : await getProductByName(item.name);
 
-                const res = await fetch(url, { signal: controller.signal });
-                if (!res.ok) {
-                    throw new Error(`Supermarket lookup returned ${res.status}`);
+                if (isMounted) {
+                    setProductData(data);
+                    if (!data) {
+                        setProductError("No matching product found in the supermarket catalog.");
+                    }
                 }
-                const data = await res.json();
-                setProductData(data);
             } catch (err) {
-                if (err.name !== "AbortError") {
+                if (isMounted) {
                     setProductError(err.message);
                     setProductData(null);
                 }
             } finally {
-                setProductLoading(false);
+                if (isMounted) {
+                    setProductLoading(false);
+                }
             }
         }
 
-        fetchSupermarketProduct();
-        return () => controller.abort();
-    }, [item?.name]);
+        loadSupermarketDetails();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [item?.name, item?.ah_product_id]);
 
     const getExpiryDetails = (dateString) => {
         if (!dateString)
