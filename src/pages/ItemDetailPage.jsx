@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
-import { getProductByName, getProductById } from "../services/supermarketApi";
+import {
+    getProductByName,
+    getProductById,
+    searchProducts,
+} from "../services/supermarketApi";
 
 const NUTRISCORE_COLORS = {
     A: "bg-emerald-600 text-white",
-    B: "bg-lime-500git  text-white",
+    B: "bg-lime-500 text-white",
     C: "bg-amber-400 text-slate-900",
     D: "bg-orange-500 text-white",
     E: "bg-rose-600 text-white",
@@ -25,10 +29,18 @@ export default function ItemDetailPage() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
-    // External Supermarket API State
+    // External Supermarket Product State
     const [productData, setProductData] = useState(null);
     const [productLoading, setProductLoading] = useState(false);
     const [productError, setProductError] = useState(null);
+
+    // Search Filter Pills State
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedBrand, setSelectedBrand] = useState(null);
+    const [selectedSubType, setSelectedSubType] = useState(null);
+    const [selectedUnitSize, setSelectedUnitSize] = useState(null);
+    const [savingPreference, setSavingPreference] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
 
     // 1. Load item from Cloudflare D1
     useEffect(() => {
@@ -44,6 +56,8 @@ export default function ItemDetailPage() {
                 } else {
                     setItem(found);
                     setFormData(found);
+                    // Only show search filter pills automatically if no preference is saved yet
+                    setShowFilters(!found.ah_product_id);
                 }
             } catch (err) {
                 setError(err.message);
@@ -54,28 +68,42 @@ export default function ItemDetailPage() {
         loadItem();
     }, [id]);
 
-
-    // 2. Fetch Supermarket Data using centralized service
+    // 2. Initial Load: Fetch Saved Product by ID OR Fetch Default Product + Search Options
     useEffect(() => {
         if (!item?.name) return;
 
         let isMounted = true;
 
-        async function loadSupermarketDetails() {
+        async function loadInitialSupermarketData() {
             try {
                 setProductLoading(true);
                 setProductError(null);
 
-                // If the item has a saved AH ID in the future, use getProductById, otherwise search by name
-                const data = item.ah_product_id
-                    ? await getProductById(item.ah_product_id)
-                    : await getProductByName(item.name);
-
-                if (isMounted) {
-                    setProductData(data);
-                    if (!data) {
-                        setProductError("No matching product found in the supermarket catalog.");
+                // Case A: User already saved a preferred product match -> Skip search API!
+                if (item.ah_product_id && !showFilters) {
+                    const exactProduct = await getProductById(item.ah_product_id);
+                    if (isMounted) {
+                        setProductData(exactProduct);
                     }
+                    return;
+                }
+
+                // Case B: No saved preference (or user clicked "Change Match") -> Call both product & search(limit=5)
+                const [bestMatch, searchRes] = await Promise.all([
+                    getProductByName(item.name),
+                    searchProducts(item.name, 5).catch(() => ({ items: [] })),
+                ]);
+
+                if (!isMounted) return;
+
+                setProductData(bestMatch);
+                const rawList = Array.isArray(searchRes)
+                    ? searchRes
+                    : searchRes?.items || searchRes?.results || searchRes?.products || [];
+                setSearchResults(rawList);
+
+                if (!bestMatch) {
+                    setProductError("No matching product found in the supermarket catalog.");
                 }
             } catch (err) {
                 if (isMounted) {
@@ -89,12 +117,116 @@ export default function ItemDetailPage() {
             }
         }
 
-        loadSupermarketDetails();
+        loadInitialSupermarketData();
 
         return () => {
             isMounted = false;
         };
-    }, [item?.name, item?.ah_product_id]);
+    }, [item?.name, item?.ah_product_id, showFilters]);
+
+    // 3. Extract Unique Filter Options from Search API Results (3 Rows)
+    const filterOptions = useMemo(() => {
+        const brands = new Set();
+        const subTypes = new Set();
+        const unitSizes = new Set();
+
+        // Include current productData in facet extraction so its attributes are also selectable
+        const combinedList = productData
+            ? [productData, ...searchResults]
+            : searchResults;
+
+        combinedList.forEach((prod) => {
+            if (prod?.brand) {
+                brands.add(prod.brand.trim());
+            }
+            if (prod?.category) {
+                // Extract sub-type after '>' (e.g. "Zuivel, eieren > Halfvolle melk" -> "Halfvolle melk")
+                const parts = prod.category.split(">");
+                const leaf = parts[parts.length - 1].trim();
+                if (leaf) subTypes.add(leaf);
+            }
+            if (prod?.price?.unitSize) {
+                unitSizes.add(prod.price.unitSize.trim());
+            }
+        });
+
+        return {
+            brands: Array.from(brands),
+            subTypes: Array.from(subTypes),
+            unitSizes: Array.from(unitSizes),
+        };
+    }, [searchResults, productData]);
+
+    // 4. Re-query Product Whenever User Taps a Filter Pill
+    const handleSelectFilter = async (type, value) => {
+        const nextBrand =
+            type === "brand" ? (selectedBrand === value ? null : value) : selectedBrand;
+        const nextSubType =
+            type === "subType"
+                ? selectedSubType === value
+                    ? null
+                    : value
+                : selectedSubType;
+        const nextUnitSize =
+            type === "unitSize"
+                ? selectedUnitSize === value
+                    ? null
+                    : value
+                : selectedUnitSize;
+
+        setSelectedBrand(nextBrand);
+        setSelectedSubType(nextSubType);
+        setSelectedUnitSize(nextUnitSize);
+
+        // Build narrowed query string: e.g. "Campina Halfvolle melk 1 l"
+        const baseTerm = nextSubType || item.name;
+        const narrowedQuery = [nextBrand, baseTerm, nextUnitSize]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+
+        try {
+            setProductLoading(true);
+            setProductError(null);
+            const updatedMatch = await getProductByName(narrowedQuery);
+            if (updatedMatch) {
+                setProductData(updatedMatch);
+            } else {
+                setProductError(`No match found for "${narrowedQuery}"`);
+            }
+        } catch (err) {
+            setProductError(err.message);
+        } finally {
+            setProductLoading(false);
+        }
+    };
+
+    // 5. Save Product Preference to D1 so next time it skips the Search API
+    const handleSavePreference = async () => {
+        if (!productData?.id) return;
+        try {
+            setSavingPreference(true);
+            const updatedPayload = {
+                ...item,
+                ah_product_id: String(productData.id),
+            };
+
+            const res = await fetch("/api/groceries", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedPayload),
+            });
+
+            if (!res.ok) throw new Error("Failed to save product preference");
+
+            setItem(updatedPayload);
+            setShowFilters(false);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSavingPreference(false);
+        }
+    };
 
     const getExpiryDetails = (dateString) => {
         if (!dateString)
@@ -186,6 +318,10 @@ export default function ItemDetailPage() {
 
     const expiry = getExpiryDetails(item.expiryDate);
     const primaryImage = productData?.images?.[0];
+    const hasAnyFilterOptions =
+        filterOptions.brands.length > 0 ||
+        filterOptions.subTypes.length > 0 ||
+        filterOptions.unitSizes.length > 0;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -199,6 +335,15 @@ export default function ItemDetailPage() {
                 </Link>
                 {!isEditing && (
                     <div className="flex items-center gap-2">
+                        {item.ah_product_id && !showFilters && (
+                            <button
+                                type="button"
+                                onClick={() => setShowFilters(true)}
+                                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors"
+                            >
+                                Change Product Match
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={() => setIsEditing(true)}
@@ -347,8 +492,8 @@ export default function ItemDetailPage() {
                 </form>
             ) : (
                 <>
-                    {/* 1. Hero Card: Product Image in Front of Item Name + Inventory Details */}
-                    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6">
+                    {/* 1. Hero Card: Product Image + Name + 3 Horizontal Filter Rows + Inventory Details */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                             <div className="flex items-center gap-4">
                                 {/* Product Image in front of the item name */}
@@ -379,15 +524,23 @@ export default function ItemDetailPage() {
                         • {productData.brand}
                       </span>
                                         )}
+                                        {item.ah_product_id && !showFilters && (
+                                            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        ✓ Saved Match
+                      </span>
+                                        )}
                                     </div>
 
                                     <h1 className="text-2xl font-bold text-slate-900 mt-1">
                                         {item.name}
                                     </h1>
 
-                                    {productData?.title && productData.title !== item.name && (
+                                    {productData?.title && (
                                         <p className="text-xs text-slate-500 mt-0.5">
-                                            Matched product: <span className="font-medium text-slate-700">{productData.title}</span>
+                                            Matched product:{" "}
+                                            <span className="font-semibold text-slate-800">
+                        {productData.title}
+                      </span>
                                         </p>
                                     )}
                                 </div>
@@ -402,6 +555,130 @@ export default function ItemDetailPage() {
                 </span>
                             </div>
                         </div>
+
+                        {/* 3 Horizontal Filter Rows (Brand, Sub-type, Unit Size) Under Name & Photo */}
+                        {showFilters && hasAnyFilterOptions && (
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-3">
+                                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Refine Product Match
+                  </span>
+                                    {(selectedBrand || selectedSubType || selectedUnitSize) && (
+                                        <span className="text-xs text-slate-500">
+                      Query:{" "}
+                                            <strong className="text-emerald-700">
+                        {[
+                            selectedBrand,
+                            selectedSubType || item.name,
+                            selectedUnitSize,
+                        ]
+                            .filter(Boolean)
+                            .join(" ")}
+                      </strong>
+                    </span>
+                                    )}
+                                </div>
+
+                                {/* Row 1: Brand Suggestions */}
+                                {filterOptions.brands.length > 0 && (
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    <span className="text-xs font-semibold text-slate-500 min-w-20 shrink-0">
+                      Brand:
+                    </span>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {filterOptions.brands.map((brand) => {
+                                                const isSelected = selectedBrand === brand;
+                                                return (
+                                                    <button
+                                                        key={brand}
+                                                        type="button"
+                                                        onClick={() => handleSelectFilter("brand", brand)}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                                                            isSelected
+                                                                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                                                                : "bg-white text-slate-700 border-slate-200 hover:border-emerald-400"
+                                                        }`}
+                                                    >
+                                                        {brand}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Row 2: Sub-type / Category Pills */}
+                                {filterOptions.subTypes.length > 0 && (
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    <span className="text-xs font-semibold text-slate-500 min-w-20 shrink-0">
+                      Sub-type:
+                    </span>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {filterOptions.subTypes.map((subType) => {
+                                                const isSelected = selectedSubType === subType;
+                                                return (
+                                                    <button
+                                                        key={subType}
+                                                        type="button"
+                                                        onClick={() => handleSelectFilter("subType", subType)}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                                                            isSelected
+                                                                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                                                                : "bg-white text-slate-700 border-slate-200 hover:border-emerald-400"
+                                                        }`}
+                                                    >
+                                                        {subType}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Row 3: Unit Size Pills */}
+                                {filterOptions.unitSizes.length > 0 && (
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    <span className="text-xs font-semibold text-slate-500 min-w-20 shrink-0">
+                      Unit Size:
+                    </span>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {filterOptions.unitSizes.map((size) => {
+                                                const isSelected = selectedUnitSize === size;
+                                                return (
+                                                    <button
+                                                        key={size}
+                                                        type="button"
+                                                        onClick={() => handleSelectFilter("unitSize", size)}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                                                            isSelected
+                                                                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                                                                : "bg-white text-slate-700 border-slate-200 hover:border-emerald-400"
+                                                        }`}
+                                                    >
+                                                        {size}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action Footer to Lock & Save Preference */}
+                                <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                                    <p className="text-[11px] text-slate-500">
+                                        Tap options above to narrow the search, then save your match so future visits load directly.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={handleSavePreference}
+                                        disabled={!productData?.id || savingPreference}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 shrink-0"
+                                    >
+                                        {savingPreference ? "Saving..." : "Save Preference"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Local Inventory Details Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
@@ -444,13 +721,13 @@ export default function ItemDetailPage() {
                     {/* 2. Supermarket Dynamic Information Boxes */}
                     {productLoading && (
                         <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500 shadow-sm">
-                            Fetching supermarket product specifications for "{item.name}"...
+                            Searching supermarket catalog...
                         </div>
                     )}
 
                     {productError && !productLoading && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
-                            Could not load supermarket details for "{item.name}" ({productError}).
+                            Could not load supermarket details ({productError}).
                         </div>
                     )}
 
@@ -458,7 +735,6 @@ export default function ItemDetailPage() {
                         <div className="space-y-6">
                             {/* Row 1: Price Card & Product Overview Card */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* Dynamic Price Box */}
                                 {productData.price && (
                                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
                                         <div>
@@ -475,7 +751,9 @@ export default function ItemDetailPage() {
 
                                             <div className="flex items-baseline gap-2 mt-2">
                         <span className="text-3xl font-extrabold text-slate-900">
-                          {productData.price.currency === "EUR" ? "€" : productData.price.currency}
+                          {productData.price.currency === "EUR"
+                              ? "€"
+                              : productData.price.currency}
                             {Number(productData.price.current).toFixed(2)}
                         </span>
                                                 {productData.price.unitSize && (
@@ -519,7 +797,8 @@ export default function ItemDetailPage() {
                                     <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                                         {productData.category && (
                                             <span>
-                        <strong className="text-slate-700">Aisle:</strong> {productData.category}
+                        <strong className="text-slate-700">Aisle:</strong>{" "}
+                                                {productData.category}
                       </span>
                                         )}
                                         {productData.id && (
@@ -546,7 +825,6 @@ export default function ItemDetailPage() {
                                             )}
                                         </div>
 
-                                        {/* Nutri-Score Badge */}
                                         {productData.nutrition.nutriscore && (
                                             <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-slate-500 uppercase">
@@ -564,7 +842,6 @@ export default function ItemDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Macro Nutrient Highlight Pills */}
                                     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5 mb-4">
                                         {productData.nutrition.energyKcal !== undefined && (
                                             <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-center">
@@ -638,7 +915,6 @@ export default function ItemDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Nutrition Claims */}
                                     {productData.nutrition.claims?.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5 pt-2">
                                             {productData.nutrition.claims.map((claim, idx) => (
